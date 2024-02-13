@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity >=0.7.0 <0.9.0;
 
 import "./CommitReveal.sol";
 
-contract RPS is CommitReveal {
+contract RWAPSSF is CommitReveal {
     struct Player {
-        uint choice; // 0 - Rock, 1 - Paper , 2 - Scissors, 3 - undefined
+        uint choice; // 0 - Rock, 1 - Fire , 2 - Scissors , 3 - Sponge , 4 - Paper , 5 - Air , 6 - Water , 7 - undefined
         address addr;
         uint time;
     }
@@ -24,14 +25,14 @@ contract RPS is CommitReveal {
         require(msg.value == 1 ether);
         reward += msg.value;
         player[numPlayer].addr = msg.sender;
-        player[numPlayer].choice = 3;
+        player[numPlayer].choice = 7;
         player[numPlayer].time = block.timestamp;
         numPlayer++;
     }
 
     function input(uint choice,uint salt) public  {
         require(numPlayer == 2);
-        require(choice == 0 || choice == 1 || choice == 2);
+        require(choice == 0 || choice == 1 || choice == 2 || choice == 3 || choice == 4 || choice == 5 || choice == 6);
         if(msg.sender == player[0].addr){
             player[0].choice = choice;
             commit(getSaltedHash(bytes32(choice),bytes32(salt)));
@@ -83,7 +84,7 @@ contract RPS is CommitReveal {
         require(numPlayer == 2);
         require(numCommit == 2);
         require(msg.sender == player[idx].addr);
-        require(choice == 0 || choice == 1 || choice == 2);
+        require(choice == 0 || choice == 1 || choice == 2 || choice == 3 || choice == 4 || choice == 5 || choice == 6);
         revealAnswer(bytes32(choice), bytes32(salt));
         numReveal++;
         if(idx==0){
@@ -91,6 +92,7 @@ contract RPS is CommitReveal {
         }else{
             revealTimeP1 = block.timestamp;
         }
+
         if (numReveal == 2) {
             _checkWinnerAndPay();
         }
@@ -101,13 +103,13 @@ contract RPS is CommitReveal {
         uint p1Choice = player[1].choice;
         address payable account0 = payable(player[0].addr);
         address payable account1 = payable(player[1].addr);
-        if ((p0Choice + 1) % 3 == p1Choice) {
-            // to pay player[1]
-            account1.transfer(reward);
-        }
-        else if ((p1Choice + 1) % 3 == p0Choice) {
+        if ((p0Choice + 1) % 7 == p1Choice || (p0Choice + 2) % 7 == p1Choice || (p0Choice + 3) % 7 == p1Choice ) {
             // to pay player[0]
-            account0.transfer(reward);    
+            account0.transfer(reward);
+        }
+        else if ((p1Choice + 1) % 7 == p0Choice || (p1Choice + 2) % 7 == p0Choice || (p1Choice + 3) % 7 == p0Choice) {
+            // to pay player[1]
+            account1.transfer(reward);    
         }
         else {
             // to split reward
